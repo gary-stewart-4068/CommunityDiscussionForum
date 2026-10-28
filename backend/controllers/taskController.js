@@ -1,5 +1,6 @@
 const Task = require('../models/Task');
 
+// this gets a list of tasks from the database for the user
 const getTasks = async (req, res) => {
     try {
         const tasks = await Task.find({ userId: req.user.id });
@@ -9,6 +10,7 @@ const getTasks = async (req, res) => {
     }
 };
 
+// this adds a task to the database linked to the user
 const addTask = async (req, res) => {
     const { title, description, deadline } = req.body;
     try {
@@ -19,7 +21,7 @@ const addTask = async (req, res) => {
     }
 };
 
-
+//this updates a task linked to the user
 const updateTask = async (req, res) => {
     const { title, description, completed, deadline } = req.body;
     try {
@@ -38,7 +40,7 @@ const updateTask = async (req, res) => {
     }
 };
 
-
+// this deletes a task
 const deleteTask = async (req, res) => {
     try {
         const task = await Task.findById(req.params.id);
