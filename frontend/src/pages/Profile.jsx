@@ -115,9 +115,16 @@ const Profile = () => {
         <input
           type="text"
           value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          onChange={(e) => {
+            setFormData({ ...formData, name: e.target.value });
+            setProfileError('');
+            setProfileSuccess('');
+          }}
           required
           autoComplete="name"
+          onInvalid={(e) => {e.preventDefault();
+            setProfileError('Please enter your name.');
+          }}
           className="w-full mb-4 p-2 border rounded"
         />
 
@@ -125,9 +132,20 @@ const Profile = () => {
         <input
           type="email"
           value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          onChange={(e) => {
+            setFormData({ ...formData, email: e.target.value });
+            setProfileError('');
+            setProfileSuccess('');
+          }}
           required
           autoComplete="email"
+          onInvalid={(e) => {e.preventDefault();
+            setProfileError(
+              e.target.validity.valueMissing
+                ? 'Please enter your email address.'
+                : 'Please enter a valid email address.'
+            );
+          }}
           className="w-full mb-4 p-2 border rounded"
         />
 
@@ -161,18 +179,34 @@ const Profile = () => {
         <input
           type="password"
           value={passwordData.currentPassword}
-          onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+          onChange={(e) => {
+            setPasswordData({ ...passwordData, currentPassword: e.target.value });
+            setPasswordError('');
+            setPasswordSuccess('');
+          }}
           required
           autoComplete="current-password"
+          onInvalid={(e) => {
+            e.preventDefault();
+            setPasswordError('Please enter your current password.');
+          }}
           className="w-full mb-4 p-2 border rounded"
         />
         <label className="block mb-2 font-medium">New Password</label>
         <input
           type="password"
           value={passwordData.newPassword}
-          onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+          onChange={(e) => {
+            setPasswordData({ ...passwordData, newPassword: e.target.value });
+            setPasswordError('');
+            setPasswordSuccess('');
+          }}
           required
           autoComplete="new-password"
+          onInvalid={(e) => {
+            e.preventDefault();
+            setPasswordError('Please enter a new password.');
+          }}
           className="w-full mb-4 p-2 border rounded"
         />
 
