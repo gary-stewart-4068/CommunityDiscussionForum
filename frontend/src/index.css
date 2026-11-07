@@ -1,3 +1,90 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* =========================================
+   IFQ636 Assignment 1 Community Discussion Forum - Frontend Styling
+   ========================================= */
+
+@layer base {
+  :root {
+    /* Brand colours */
+    --color-primary: #2563a6;
+    --color-primary-hover: #1d4f87;
+    --color-primary-light: #eaf2fa;
+
+    /* Neutral colours */
+    --color-background: #ffffff;
+    --color-surface: #f3f4f6;
+    --color-border: #d1d5db;
+
+    /* Text colours */
+    --color-text: #252b33;
+    --color-text-secondary: #626b76;
+    --color-text-muted: #858d97;
+
+    /* Feedback colours */
+    --color-warning: #d97706;
+    --color-warning-light: #fff7e6;
+    --color-danger: #c62828;
+    --color-danger-light: #fdecec;
+    --color-success: #27834a;
+    --color-success-light: #eaf6ee;
+
+    /* Layout */
+    --page-max-width: 1200px;
+    --content-padding: 24px;
+    --section-spacing: 24px;
+
+    /* Component styling */
+    --border-radius: 6px;
+    --input-height: 42px;
+    --button-height: 40px;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-background);
+    color: var(--color-text);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--color-text);
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: var(--color-primary-hover);
+  }
+
+  /* Navigation links on the blue navbar */
+  nav a {
+    color: #ffffff;
+  }
+
+  nav a:hover {
+    color: #ffffff;
+  }
+
+  button, input, textarea, select {
+    font: inherit;
+  }
+
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  a:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}

@@ -4,12 +4,13 @@ const bcrypt = require('bcrypt');
 
 const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
+    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true },
-    university: { type: String },
-    address: { type: String },
+    role: { type: String, enum: ['Member', 'Admin'], default: 'Member' },
+    _deleted: { type: Boolean, default: false },
 });
 
+// Pre-save hook to hash the password before saving the user document
 userSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return next();
     const salt = await bcrypt.genSalt(10);
