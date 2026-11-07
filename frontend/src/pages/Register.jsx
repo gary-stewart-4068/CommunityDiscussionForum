@@ -52,6 +52,10 @@ const Register = () => {
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           required
           autoComplete="name"
+          onInvalid={(e) => {
+            e.preventDefault();
+            setError('Please enter your name.');
+          }}
           className="w-full mb-4 p-2 border rounded"
         />
         <input
@@ -61,6 +65,14 @@ const Register = () => {
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           required
           autoComplete="email"
+          onInvalid={(e) => {
+            e.preventDefault();
+            setError(
+              e.target.validity.valueMissing
+                ? 'Please enter your email address.'
+                : 'Please enter a valid email address.'
+            );
+          }}
           className="w-full mb-4 p-2 border rounded"
         />
         <input
@@ -70,6 +82,10 @@ const Register = () => {
           onChange={(e) => setFormData({ ...formData, password: e.target.value })}
           required
           autoComplete="new-password"
+          onInvalid={(e) => {
+            e.preventDefault();
+            setError('Please enter a password.');
+          }}
           className="w-full mb-4 p-2 border rounded"
         />
         <button type="submit" disabled={loading} className="w-full bg-green-600 text-white p-2 rounded disabled:opacity-50">

@@ -57,8 +57,11 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-        return res.status(400).json({ message: 'Please provide email and password' });
+    if (
+        typeof email !== 'string' || !email.trim() ||
+        typeof password !== 'string' || !password
+    ) {
+        return res.status(400).json({ message: 'Please provide a valid email and password' });
     }
 
     try {
@@ -111,11 +114,36 @@ const getProfile = async (req, res) => {
 
 // Update authenticated user's profile
 const updateUserProfile = async (req, res) => {
+    if (!req.body || Object.keys(req.body).length === 0) {
+        return res.status(400).json({ message: 'Please provide at least one profile field to update' });
+    }
     try {
         const user = await User.findById(req.user.id);
         if (!user || user._deleted) return res.status(404).json({ message: 'User not found' });
 
         // Only user can update their name and email. Role and _deleted status are not updatable by the user.
+
+        // Role and deleted status can only be changed through Admin User Management.
+        if (
+            Object.prototype.hasOwnProperty.call(req.body, 'role') ||
+            Object.prototype.hasOwnProperty.call(req.body, '_deleted')
+        ) {
+            return res.status(403).json({
+                message: 'You are not authorised to change account role or status here'
+            });
+        }
+
+        // Reject requests that contain no supported profile fields.
+        const allowedFields = ['name', 'email'];
+        const hasAllowedField = allowedFields.some(field =>
+            Object.prototype.hasOwnProperty.call(req.body, field)
+        );
+
+        if (!hasAllowedField) {
+            return res.status(400).json({
+                message: 'Please provide a name or email address to update'
+            });
+        }
         if (Object.prototype.hasOwnProperty.call(req.body, 'name')) {
             if (typeof req.body.name !== 'string' || !req.body.name.trim()) {
                 return res.status(400).json({ message: 'Name cannot be empty' });

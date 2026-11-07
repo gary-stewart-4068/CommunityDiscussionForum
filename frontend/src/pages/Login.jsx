@@ -42,6 +42,14 @@ const Login = () => {
           placeholder="Email"
           value={formData.email}
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          required
+          autoComplete="email"
+          onInvalid={(e) => {e.preventDefault();
+            setError(e.target.validity.valueMissing
+              ? 'Please enter your email address.'
+              : 'Please enter a valid email address.'
+            );
+          }}
           className="w-full mb-4 p-2 border rounded"
         />
         <input
@@ -51,6 +59,9 @@ const Login = () => {
           onChange={(e) => setFormData({ ...formData, password: e.target.value })}
           required
           autoComplete="current-password"
+          onInvalid={(e) => {e.preventDefault();
+            setError('Please enter your password.');
+          }}
           className="w-full mb-4 p-2 border rounded"
         />
         <button
