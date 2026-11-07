@@ -7,67 +7,179 @@ const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
 };
 
+const normaliseEmail = (email) => {return email.trim().toLowerCase();};
+
+const isValidEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+};
+
+const isDuplicateEmailError = (error) => {
+    return error.code === 11000;
+};
+
+// this registers a new Member in the database
 const registerUser = async (req, res) => {
     const { name, email, password } = req.body;
-    try {
-        const userExists = await User.findOne({ email });
-        if (userExists) return res.status(400).json({ message: 'User already exists' });
 
-        const user = await User.create({ name, email, password });
-        res.status(201).json({ id: user.id, name: user.name, email: user.email, token: generateToken(user.id) });
+    if (
+        typeof name !== 'string' || !name.trim() ||
+        typeof email !== 'string' || !email.trim() ||
+        typeof password !== 'string' || !password
+    ) {
+        return res.status(400).json({ message: 'Please provide name, email, and password' });
+    }
+
+    const cleanEmail = normaliseEmail(email);
+
+    if (!isValidEmail(cleanEmail)) {
+        return res.status(400).json({ message: 'Please enter a valid email address' });
+    }
+
+    try {
+        const userExists = await User.findOne({ email: cleanEmail });
+        if (userExists) return res.status(409).json({ message: 'User already exists' });
+
+        const user = await User.create({ name, email: cleanEmail, password, role: 'Member', _deleted: false });
+        res.status(201).json({ id: user.id, name: user.name, email: user.email, role: user.role, token: generateToken(user.id) });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        if (isDuplicateEmailError(error)) {
+            return res.status(409).json({ message: 'User with this email already exists' });
+        }
+
+        console.error('Error registering user:', error);
+
+        res.status(500).json({ message: 'Registration failed. Please try again.' });
     }
 };
 
+//
 const loginUser = async (req, res) => {
     const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).json({ message: 'Please provide email and password' });
+    }
+
     try {
-        const user = await User.findOne({ email });
-        if (user && (await bcrypt.compare(password, user.password))) {
-            res.json({ id: user.id, name: user.name, email: user.email, token: generateToken(user.id) });
-        } else {
-            res.status(401).json({ message: 'Invalid email or password' });
+        const cleanEmail = normaliseEmail(email);
+        const user = await User.findOne({ email: cleanEmail });
+        if (!user) return res.status(401).json({ message: 'Invalid email or password' });
+        if (user._deleted) return res.status(403).json({ message: 'This account is no longer active. Please contact an administrator.' });
+
+        const passwordMatches = await bcrypt.compare(password, user.password);
+
+        if (!passwordMatches) {
+            return res.status(401).json({ message: 'Invalid email or password' });
         }
+
+        return res.status(200).json({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            token: generateToken(user.id) });
+
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('Error logging in user:', error);
+
+        return res.status(500).json({ message: 'Sign-in could not be completed. Please try again.' });
     }
 };
 
+// Retrieve authenticated user's profile
 const getProfile = async (req, res) => {
     try {
-      const user = await User.findById(req.user.id);
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-  
-      res.status(200).json({
-        name: user.name,
-        email: user.email,
-        university: user.university,
-        address: user.address,
-      });
+        const user = await User.findById(req.user.id).select('-password');
+
+        if (!user || user._deleted) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        return res.status(200).json({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role
+        });
+
     } catch (error) {
-      res.status(500).json({ message: 'Server error', error: error.message });
+        console.error('Error retrieving user profile:', error);
+        return res.status(500).json({ message: 'An error occurred while retrieving the profile. Please try again.' });
     }
   };
 
+// Update authenticated user's profile
 const updateUserProfile = async (req, res) => {
     try {
         const user = await User.findById(req.user.id);
-        if (!user) return res.status(404).json({ message: 'User not found' });
+        if (!user || user._deleted) return res.status(404).json({ message: 'User not found' });
 
-        const { name, email, university, address } = req.body;
-        user.name = name || user.name;
-        user.email = email || user.email;
-        user.university = university || user.university;
-        user.address = address || user.address;
+        // Only user can update their name and email. Role and _deleted status are not updatable by the user.
+        if (Object.prototype.hasOwnProperty.call(req.body, 'name')) {
+            if (typeof req.body.name !== 'string' || !req.body.name.trim()) {
+                return res.status(400).json({ message: 'Name cannot be empty' });
+            }
+            user.name = req.body.name.trim();
+        }
+
+        if (Object.prototype.hasOwnProperty.call(req.body, 'email')) {
+            if (typeof req.body.email !== 'string' || !req.body.email.trim()) {
+                return res.status(400).json({ message: 'Email cannot be empty' });
+            }
+            const cleanEmail = normaliseEmail(req.body.email);
+            if (!isValidEmail(cleanEmail)) {
+                return res.status(400).json({ message: 'Please enter a valid email address' });
+            }
+            user.email = cleanEmail;
+        }
 
         const updatedUser = await user.save();
-        res.json({ id: updatedUser.id, name: updatedUser.name, email: updatedUser.email, university: updatedUser.university, address: updatedUser.address, token: generateToken(updatedUser.id) });
+        return res.status(200).json({
+            id: updatedUser.id,
+            name: updatedUser.name,
+            email: updatedUser.email,
+            role: updatedUser.role,
+            token: generateToken(updatedUser.id)
+        });
+
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        if (isDuplicateEmailError(error)) {
+            return res.status(409).json({ message: 'User with this email already exists' });
+        }
+        console.error('Error updating user profile:', error);
+        return res.status(500).json({ message: 'Profile update failed. Please try again.' });
     }
 };
 
-module.exports = { registerUser, loginUser, updateUserProfile, getProfile };
+// Change the authenticated user's password
+const changePassword = async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+
+    if (
+        typeof currentPassword !== 'string' || !currentPassword ||
+        typeof newPassword !== 'string' || !newPassword
+    ) {
+        return res.status(400).json({ message: 'Please provide both current and new passwords' });
+    }
+
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user || user._deleted) return res.status(404).json({ message: 'User not found' });
+
+        const passwordMatches = await bcrypt.compare(currentPassword, user.password);
+        if (!passwordMatches) {
+            return res.status(401).json({ message: 'Current password is incorrect' });
+        }
+
+        user.password = newPassword;
+        await user.save();
+        return res.status(200).json({ message: 'Password changed successfully' });
+
+    } catch (error) {
+        console.error('Error changing password:', error);
+        return res.status(500).json({ message: 'Password change failed. Please try again.' });
+    }
+};
+
+module.exports = { registerUser, loginUser, updateUserProfile, getProfile, changePassword };

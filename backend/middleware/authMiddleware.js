@@ -3,21 +3,35 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 const protect = async (req, res, next) => {
-    let token;
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: 'Not authorized, please sign in' });
+    }
+    const token = authHeader.split(' ')[1];
+    if (!token) {
+        return res.status(401).json({ message: 'Not authorized, please sign in' });
+    }
+    let decoded;
 
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-        try {
-            token = req.headers.authorization.split(' ')[1];
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            req.user = await User.findById(decoded.id).select('-password');
-            next();
-        } catch (error) {
-            res.status(401).json({ message: 'Not authorized, token failed' });
-        }
+    // Verify the JWT separately from the database query to handle invalid tokens gracefully
+    try {
+        decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (error) {
+        return res.status(401).json({ message: 'Your session is invalid or expired. Please sign in again' });
     }
 
-    if (!token) {
-        res.status(401).json({ message: 'Not authorized, no token' });
+    // Confirm that account still exists and is active
+    try {
+        const user = await User.findById(decoded.id).select('-password');
+        if (!user || user._deleted) {
+            return res.status(401).json({ message: 'User account is no longer active. Please contact an administrator' });
+        }
+        req.user = user; // Attach the user object to the request for downstream use
+        return next();
+
+    } catch (error) {
+        console.error('Authentication error:', error);
+        return res.status(500).json({ message: 'Authentication could not be completed. Please try again later' });
     }
 };
 

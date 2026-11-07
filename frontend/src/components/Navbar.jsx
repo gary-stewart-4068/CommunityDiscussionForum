@@ -9,33 +9,68 @@ const Navbar = () => {
     logout();
     navigate('/login');
   };
+  const linkStyle = "px-3 py-2 rounded hover:bg-blue-700 transition-colors";
 
   return (
-    <nav className="bg-blue-600 text-white p-4 flex justify-between items-center">
-      <Link to="/" className="text-2xl font-bold">Task Manager</Link>
-      <div>
+    <nav className="bg-[#2563a6] text-white px-6 py-4 flex justify-between items-center">
+
+      {/* Forum branding */}
+      <Link to="/" className="text-xl font-semibold tracking-wide">
+        Community Discussion Forum
+      </Link>
+
+      {/* Navigation links */}
+      <div className="flex items-center gap-2">
+
         {user ? (
           <>
-            <Link to="/tasks" className="mr-4">Tasks</Link>
-            <Link to="/profile" className="mr-4">Profile</Link>
+            {/* Member and Admin navigation */}
+            <Link to="/tasks" className={linkStyle}>
+              Forum
+            </Link>
+
+            <Link to="/tasks" className={linkStyle}>
+              Create Topic
+            </Link>
+
+            {user.role === 'Admin' && (
+              <>
+                <Link to="/admin/users" className={linkStyle}>
+                  User Administration
+                </Link>
+
+                <Link to="/admin/moderation" className={linkStyle}>
+                  Moderation
+                </Link>
+              </>
+            )}
+
+            <Link to="/profile" className={linkStyle}>
+              My Profile
+            </Link>
+
             <button
               onClick={handleLogout}
-              className="bg-red-500 px-4 py-2 rounded hover:bg-red-700"
+              className="ml-2 px-4 py-2 rounded border border-white font-medium hover:bg-red-700 hover:border-red-700 transition-colors"
             >
-              Logout
+              Sign Out
             </button>
           </>
         ) : (
           <>
-            <Link to="/login" className="mr-4">Login</Link>
+            <Link to="/login" className={linkStyle}>
+              Sign In
+            </Link>
+
             <Link
               to="/register"
-              className="bg-green-500 px-4 py-2 rounded hover:bg-green-700"
+              className="ml-2 px-4 py-2 rounded bg-white text-[#2563a6] font-medium hover:bg-gray-100 transition-colors"
             >
               Register
             </Link>
           </>
         )}
+
       </div>
     </nav>
   );
