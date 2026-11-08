@@ -15,40 +15,21 @@ const Navbar = () => {
     <nav className="bg-[#2563a6] text-white px-6 py-4 flex justify-between items-center">
 
       {/* Forum branding */}
-      <Link to="/" className="text-xl font-semibold tracking-wide">
-        Community Discussion Forum
-      </Link>
-
+      <Link to="/" className="text-xl font-semibold tracking-wide">Community Discussion Forum</Link>
       {/* Navigation links */}
       <div className="flex items-center gap-2">
-
         {user ? (
           <>
             {/* Member and Admin navigation */}
-            <Link to="/tasks" className={linkStyle}>
-              Forum
-            </Link>
-
-            <Link to="/tasks" className={linkStyle}>
-              Create Topic
-            </Link>
-
+            <Link to="/tasks" className={linkStyle}>Forum</Link>
+            <Link to="/topics/create" className={linkStyle}>Create Topic</Link>
             {user.role === 'Admin' && (
               <>
-                <Link to="/admin/users" className={linkStyle}>
-                  User Administration
-                </Link>
-
-                <Link to="/admin/moderation" className={linkStyle}>
-                  Moderation
-                </Link>
+                <Link to="/admin/users" className={linkStyle}>User Administration</Link>
+                <Link to="/admin/moderation" className={linkStyle}>Moderation</Link>
               </>
             )}
-
-            <Link to="/profile" className={linkStyle}>
-              My Profile
-            </Link>
-
+            <Link to="/profile" className={linkStyle}>My Profile</Link>
             <button
               onClick={handleLogout}
               className="ml-2 px-4 py-2 rounded border border-white font-medium hover:bg-red-700 hover:border-red-700 transition-colors"
@@ -58,19 +39,12 @@ const Navbar = () => {
           </>
         ) : (
           <>
-            <Link to="/login" className={linkStyle}>
-              Sign In
-            </Link>
-
-            <Link
-              to="/register"
-              className="ml-2 px-4 py-2 rounded bg-white text-[#2563a6] font-medium hover:bg-gray-100 transition-colors"
-            >
+            <Link to="/login" className={linkStyle}>Sign In</Link>
+            <Link to="/register" className="ml-2 px-4 py-2 rounded bg-white text-[#2563a6] font-medium hover:bg-gray-100 transition-colors">
               Register
             </Link>
           </>
         )}
-
       </div>
     </nav>
   );
