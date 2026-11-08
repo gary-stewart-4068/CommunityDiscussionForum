@@ -8,6 +8,7 @@ import Profile from './pages/Profile';
 import Tasks from './pages/Tasks';
 import UserManagement from './pages/UserManagement';
 import CreateTopic from './pages/CreateTopic';
+import CreateReply from './pages/CreateReply';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
             <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
             <Route path="/admin/users" element={<ProtectedRoute adminOnly><UserManagement /></ProtectedRoute>} />
             <Route path="/topics/create" element={<ProtectedRoute><CreateTopic /></ProtectedRoute>} />
+            <Route path="/replies/create" element={<ProtectedRoute><CreateReply /></ProtectedRoute>} />
             {/* Default route */}
             <Route path="/" element={<Navigate to="/tasks" replace />} />
             {/* Unknown routes */}

@@ -18,5 +18,24 @@ const createTopic = async (req, res) => {
         return res.status(500).json({message: 'Topic could not be created. Please try again.'});
     }
 };
+// Retrieve the first visible topic for the temporary Create Reply page
+const getFirstVisibleTopic = async (req, res) => {
+    try {
+        const topic = await Topic.findOne({ _visible: true })
+            .sort({ createdAt: 1 })
+            .populate('author', 'name');
+        if (!topic) {
+            return res.status(404).json({
+                message: 'No visible topics are currently available.'
+            });
+        }
+        return res.status(200).json(topic);
+    } catch (error) {
+        console.error('Error retrieving first visible topic:', error);
+        return res.status(500).json({
+            message: 'Topic could not be retrieved. Please try again.'
+        });
+    }
+};
 
-module.exports = { createTopic };
+module.exports = { createTopic, getFirstVisibleTopic };

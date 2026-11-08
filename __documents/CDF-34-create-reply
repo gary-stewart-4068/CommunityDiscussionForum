@@ -1,0 +1,37 @@
+CDF-34 — Create a reply
+
+This Jira task implements requirements defined in CDF-34 Story 7: Create areply. 
+
+Builds on completed branches:
+- feature/CDF-7
+- feature/CDF-9
+- feature/CDF-13
+- feature/CDF-19
+- feature/CDF-14
+- feature/CDF-33
+
+Updated the following files in this task:
+1. topicRoutes.js - added route for createReply to keep content related routes together. Added temporary route for getFirstVisibleTopic until CDF-28 is implemented.
+2. topicController.js - added temporary function to find first visible Topic to test create reply functionality. This will be removed when CDF-28 is implemented.
+3. App.js - added CreateReply as a protected route
+4. Navbar.jsx - modified to insert a temporary link for Create Reply until proper functionality implemented in CDF-28
+
+Created the following in this task:
+5. Reply.js - new model to define the Reply class
+6. replyController.js - new controller for reply functions, with createReply in this feature
+7. CreateReply.jsx - new page for create reply frontend
+
+CDF-34 Acceptance Criteria status. Test report version 5 records test results in detail. Summary of test results connected with CDF-34:
+- TST030 - PASS
+- TST031 - PASS
+- TST032 - Deferred to CDF-28 
+- TST033 - PASS 
+- TST034 - PASS 
+
+CHANGE LOG (to be added to Jira change log) as Change (8 next):
+Decision: temporary workflow created to confirm Create Reply functionality before implementing CDF-28 
+
+Design documentation changes:
+- nil
+
+Reflection. Developing Create Reply before the viewing functionality has required temporary coding to be completed. In future, more time spent considering the functional dependencies could reduce code rework.
