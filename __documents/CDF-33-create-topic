@@ -1,0 +1,37 @@
+CDF-33 — Create a topic
+
+This Jira task implements requirements defined in CDF-33 Story 6: : Create a topic. 
+
+Builds on completed branches:
+- feature/CDF-7
+- feature/CDF-9
+- feature/CDF-13
+- feature/CDF-19
+- feature/CDF-14
+
+This feature begins to replace the starter project TaskManager functionality with the CDF functionality.
+
+Updated the following files in this task:
+1. server.js - modified to introduce /api/topics for topicRoutes
+2. App.js - added CreateTopic as a protected route
+3. Navbar.jsx - modified to replace link for Create Topic from /tasks to /topics/create
+
+Created the following in this task:
+4. Topic.js - new model to define the Topic class
+5. topicController.js - new controller for topic functions, with createTopic in this feature
+6. topicRoutes.js - new routes for topic functions, starting with the route for createTopic
+7. CreateTopic.jsx - new page for create topic frontend
+
+CDF-33 Acceptance Criteria status. Test report version 5 records test results in detail. Summary of test results connected with CDF-33:
+- TST026 - PASS
+- TST027 - PASS
+- TST028 - Deferred to CDF-28 
+- TST029 - PASS
+
+CHANGE LOG (to be added to Jira change log) as Change (8 next):
+Decision: nil 
+
+Design documentation changes:
+- nil
+
+Reflection. nil.
