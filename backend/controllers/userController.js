@@ -146,4 +146,30 @@ const promoteUser = async (req, res) => {
     }
 };
 
-module.exports = {getUsers, getUserById, updateUser, promoteUser };
+// Soft delete a user account (Admin only)
+const deleteUser = async (req, res) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+    }
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {return res.status(404).json({message: 'User not found'});
+        }
+        if (user._deleted) {return res.status(400).json({message: 'This account has already been deleted'});
+        }
+        // Prevent deletion of the last active Admin
+        if (user.role === 'Admin') {
+            const activeAdminCount = await User.countDocuments({role: 'Admin', _deleted: false});
+            if (activeAdminCount <= 1) {return res.status(400).json({message: 'The last active Admin account cannot be deleted'});}
+        }
+        // Soft delete: retain the account and associated content
+        user._deleted = true;
+        const deletedUser = await user.save();
+        return res.status(200).json({message: 'User account successfully deleted',user: formatUser(deletedUser)});
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        return res.status(500).json({message: 'User deletion failed. Please try again.'});
+    }
+};
+
+module.exports = {getUsers, getUserById, updateUser, promoteUser, deleteUser};

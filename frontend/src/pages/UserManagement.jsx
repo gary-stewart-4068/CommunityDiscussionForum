@@ -10,6 +10,7 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [promoting, setPromoting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -105,6 +106,28 @@ const UserManagement = () => {
       );
     } finally {
       setPromoting(false);
+    }
+  };
+
+  // Soft delete a user account
+  const handleDeleteUser = async () => {
+    if (!selectedUser || selectedUser._deleted) return;
+    if (!window.confirm(`Are you sure you want to delete the account for ${selectedUser.name}?`)) {return;}
+    setDeleting(true);
+    setError('');
+    setSuccess('');
+    try {
+      const response = await axiosInstance.delete(`/api/users/${selectedUser.id}`);
+      const deletedUser = response.data.user;
+      setUsers((previousUsers) =>
+        previousUsers.map((user) => user.id === deletedUser.id ? deletedUser : user)
+      );
+      setSelectedUser(null);
+      setSuccess(response.data.message);
+    } catch (error) {
+      setError(error.response?.data?.message || 'User deletion failed. Please try again.');
+    } finally {
+      setDeleting(false);
     }
   };
   if (loading) {
@@ -243,6 +266,16 @@ const UserManagement = () => {
                     {promoting ? 'Promoting...' : 'Promote to Admin'}
                   </button>
                 )}
+              {!selectedUser._deleted && (
+                <button
+                  type="button"
+                  onClick={handleDeleteUser}
+                  disabled={deleting || saving || promoting}
+                  className="px-5 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+                >
+                  {deleting ? 'Deleting...' : 'Delete User'}
+                </button>
+              )}
             </div>
           </form>
         </section>
