@@ -1,21 +1,28 @@
-**Task Manager Application Overview:The task manager application is designed to help users efficiently manage their tasks and responsibilities by providing a user-friendly interface for creating, viewing, updating, and deleting tasks. It includes essential features such as secure user authentication, allowing individuals to sign up and log in to their accounts, as well as profile management to update personal information. With built-in validation such as input field validation and email validation, the application ensures a seamless user experience while enhancing productivity and organization in both personal and professional settings. **
+***WARNING - THIS IS UNDER DEVELOPMENT AND THIS README WILL BE PROGRESSIVELY UPDATED AS FEATURES ARE IMPLEMENTED***
 
-**This apps **contain** the following features:**
+**Community Discussion Forum (CDF) Application Overview:**
+This application has been developed for IFQ636 Assignment 1. The CDF application is designed to demonstrate a forum discussion board for a generic community group by providing a user-friendly interface for creating, viewing, updating, moderating and deleting forum topics and replies.
 
-* Signup
-* Login
-* Logout
-* Update profile
-* Add tasks
-* View tasks
-* Update tasks
-* Delete tasks
+The CDF is a basic discussion forum. There are two permitted roles: **Members** that are the default role when a user registers, and **Admin** responsible for CDF user management and content moderation.
 
-**This **app**lication** is**almost **a** precompiled** app**. However, students will develop some features,**such as adding tasks, viewing tasks, updating tasks, and **deleting** tasks**. **Students** will interact with GitHub when they develop the features.**
+**Content** The CDF has two types of content: **Topic** that contains a title and description, and **Reply**. A topic can have multiple replies linked to it. Any valid user can create, update and delete their own content. Any valid user can view and search visible content with a simple text string search.
 
+**Content moderation** The CDF has a simple moderation service where any valid user can **Report** a content item as inappropriate. This will create a user unique report that any Admin can review. Users will need to provide a reason why they believe the content is inappropriate. An Admin can review open reports, and decide to hide or delete inappropriate content, reject the request and keep content visible.
+
+**User Management** The CDF has basic user management services. A Member can view and update their own name, email and password. An Admin can update any user account, promote a Member to Admin, and delete a user account. If a user has been deleted, they will receive a specific error message the next time they log in.
+
+**Content management** An Admin can view all, visible or hidden content. An Admin can change content to hide/visible, and delete any content.
+
+**Account creation** Public registration always creates a Member account. One Admin account is created when the backend starts using credentials stored in /backend/.env. This only happens if a valid Admin account **does not** exist in the database.
+
+Hiding or deleting a Topic will make the same change to its linked replies and reports.
+
+The CDF includes essential features such as secure user authentication, role-based authorisation, input field validation and email validation, and error handling.
+
+This application is built on the start app provided by QUT.
 ---
 
-**Prerequisite:** Please install the following software and create account in following web tools** **
+**Prerequisite:** Please install the following software and create accounts for the following web tools** **
 
 * **Nodejs [**[https://nodejs.org/en](https://nodejs.org/en)]** **
 * **Git [**[https://git-scm.com/](https://git-scm.com/)]** **
@@ -25,4 +32,4 @@
 
 ---
 
-[![Backend CI](https://github.com/rajuiit/taskmanager_aws_setup/actions/workflows/ci.yml/badge.svg)](https://github.com/rajuiit/taskmanager_aws_setup/actions/workflows/ci.yml)
+**Environment setup** {{text to be developed}}
