@@ -23,6 +23,7 @@ const Navbar = () => {
             {/* Member and Admin navigation */}
             <Link to="/tasks" className={linkStyle}>Forum</Link>
             <Link to="/topics/create" className={linkStyle}>Create Topic</Link>
+            <Link to="/replies/create" className={linkStyle}>Create Reply</Link>
             {user.role === 'Admin' && (
               <>
                 <Link to="/admin/users" className={linkStyle}>User Administration</Link>

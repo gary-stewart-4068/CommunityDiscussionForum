@@ -1,10 +1,12 @@
 const express = require('express');
-const { createTopic } = require('../controllers/topicController');
+const { createTopic, getFirstVisibleTopic } = require('../controllers/topicController');
+const { createReply } = require('../controllers/replyController');
 const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-// Authenticated Members and Admins can create topics
-router.post('/', protect, createTopic);
+router.post('/', protect, createTopic); // Authenticated Members and Admins can create topics
+router.post('/:topicId/replies', protect, createReply); // Authenticated Members and Admins can create replies
+router.get('/first-visible', protect, getFirstVisibleTopic); // Retrieve the first visible topic for the authenticated user
 
 module.exports = router;
