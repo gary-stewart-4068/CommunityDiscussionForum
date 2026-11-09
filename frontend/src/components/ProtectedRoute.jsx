@@ -11,7 +11,7 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
 
   // Restrict Admin only routes to Admin users
   if (adminOnly && user.role !== 'Admin') {
-    return <Navigate to="/tasks" replace />;
+    return <Navigate to="/forum" replace />;
   }
   return children;
 };

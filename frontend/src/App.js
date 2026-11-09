@@ -5,10 +5,10 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
-import Tasks from './pages/Tasks';
+import Forum from './pages/Forum';
 import UserManagement from './pages/UserManagement';
+import TopicDetail from './pages/TopicDetail';
 import CreateTopic from './pages/CreateTopic';
-import CreateReply from './pages/CreateReply';
 
 function App() {
   return (
@@ -22,12 +22,12 @@ function App() {
             <Route path="/register" element={<Register />} />
             {/* Protected routes */}
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-            <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
+            <Route path="/forum" element={<ProtectedRoute><Forum /></ProtectedRoute>} />
+            <Route path="/topics/:topicId" element={<ProtectedRoute><TopicDetail /></ProtectedRoute>} />
             <Route path="/admin/users" element={<ProtectedRoute adminOnly><UserManagement /></ProtectedRoute>} />
             <Route path="/topics/create" element={<ProtectedRoute><CreateTopic /></ProtectedRoute>} />
-            <Route path="/replies/create" element={<ProtectedRoute><CreateReply /></ProtectedRoute>} />
             {/* Default route */}
-            <Route path="/" element={<Navigate to="/tasks" replace />} />
+            <Route path="/" element={<Navigate to="/forum" replace />} />
             {/* Unknown routes */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
