@@ -1,0 +1,37 @@
+CDF-35 — Edit or delete own content
+
+This Jira task implements requirements defined in CDF-35 Story 8: Edit or delete own content. 
+
+Builds on completed branches:
+- feature/CDF-7
+- feature/CDF-9
+- feature/CDF-13
+- feature/CDF-19
+- feature/CDF-14
+- feature/CDF-33
+- feature/CDF-34
+- feature/CDF-28
+
+Updated the following files in this task:
+1. topicController.js - modified to add updateTopic and deleteTopic functionality
+2. topicRoutes.js - modified to include protected routes for updating and deleting topics and replies
+3. replyController.js - modified to add updateReply and deleteReply functionality
+4. Forum.jsx - modified to add update and delete functionality
+5. TopicDetail.jsx - modified to add update and delete functionality
+
+Created the following in this task:
+6. nil
+
+CDF-35 Acceptance Criteria status. Test report version 6 records test results in detail. Summary of test results connected with CDF-35:
+- TST041 - PASS
+- TST042 - PASS
+- TST043 - PASS
+- TST044 - DEFERRED - moderation reports are not implemented until CDF-48. Deletion of moderation Reports linked to topics and replies cannot be tested until feature CDF-48 is complete.
+ 
+CHANGE LOG (to be added to Jira change log) as UPDATE to Change (9):
+x
+
+Design documentation changes:
+- nil
+
+Reflection. .

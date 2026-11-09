@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Topic = require('../models/Topic');
 const Reply = require('../models/Reply');
 
@@ -19,6 +20,76 @@ const createTopic = async (req, res) => {
         return res.status(500).json({message: 'Topic could not be created. Please try again.'});
     }
 };
+
+// Update a topic owned by the authenticated user
+const updateTopic = async (req, res) => {
+    const { topicId } = req.params;
+    const { title, content } = req.body;
+    // Validate the Topic ID
+    if (!mongoose.Types.ObjectId.isValid(topicId)) {
+        return res.status(400).json({ message: 'Invalid topic ID' });
+    }
+    // Require at least one editable field
+    if (title === undefined && content === undefined) {
+        return res.status(400).json({
+            message: 'Please provide a topic title or content to update'
+        });
+    }
+    // Validate supplied fields
+    if (
+        (title !== undefined && (typeof title !== 'string' || !title.trim())) ||
+        (content !== undefined && (typeof content !== 'string' || !content.trim()))
+    ) {
+        return res.status(400).json({message: 'Topic title and content cannot be empty' });
+    }
+    try {
+        // Find the Topic and verify ownership
+        const topic = await Topic.findOne({_id: topicId, author: req.user.id });
+        if (!topic) {
+            return res.status(404).json({message: 'Topic not found or you are not authorised to update it' });
+        }
+        // Update only the supplied editable fields
+        if (title !== undefined) {topic.title = title.trim(); }
+        if (content !== undefined) { topic.content = content.trim(); }
+        await topic.save();
+        return res.status(200).json(topic);
+    } catch (error) {
+        console.error('Error updating topic:', error);
+        return res.status(500).json({message: 'Topic could not be updated. Please try again.' });
+    }
+};
+
+// Delete a topic owned by the authenticated user and all its replies
+const deleteTopic = async (req, res) => {
+    const { topicId } = req.params;
+    // Validate the Topic ID
+    if (!mongoose.Types.ObjectId.isValid(topicId)) {
+        return res.status(400).json({message: 'Invalid topic ID' }); }
+    let session;
+    try {
+        session = await mongoose.startSession();
+        let topicFound = false;
+        await session.withTransaction(async () => {
+            topicFound = false;
+            // Find the Topic and verify ownership
+            const topic = await Topic.findOne({_id: topicId, author: req.user.id }).session(session);
+            if (!topic) {return; }
+            topicFound = true;
+            // Delete every Reply linked to this Topic
+            await Reply.deleteMany({topic: topic._id }).session(session);
+            // Delete the Topic
+            await Topic.deleteOne({_id: topic._id }).session(session);
+        });
+        if (!topicFound) {
+            return res.status(404).json({message: 'Topic not found or you are not authorised to delete it' }); }
+        return res.status(200).json({message: 'Topic and its replies deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting topic:', error);
+        return res.status(500).json({message: 'Topic and its replies could not be deleted. Please try again.' });
+    } finally {
+        if (session) {await session.endSession(); } }
+};
+
 // Retrieve and search topics for the authenticated user
 const getTopics = async (req, res) => {
     const isAdmin = req.user.role === 'Admin';
@@ -94,7 +165,7 @@ const getTopicById = async (req, res) => {
     const { topicId } = req.params;
     const isAdmin = req.user.role === 'Admin';
     // Validate the Topic ID
-    if (!require('mongoose').Types.ObjectId.isValid(topicId)) {
+    if (!mongoose.Types.ObjectId.isValid(topicId)) {
         return res.status(400).json({ message: 'Invalid topic ID' });
     }
     try {
@@ -128,4 +199,4 @@ const getTopicById = async (req, res) => {
     }
 };
 
-module.exports = { createTopic, getTopics, getTopicById };
+module.exports = { createTopic, deleteTopic, getTopics, getTopicById, updateTopic };
