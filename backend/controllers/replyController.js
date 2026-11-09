@@ -22,6 +22,7 @@ const createReply = async (req, res) => {
         }
         // Create reply using the authenticated user's ID
         const reply = await Reply.create({ topic: topic._id, author: req.user.id, content: content.trim() });
+        await reply.populate('author', 'name');
         return res.status(201).json(reply);
     } catch (error) {
         console.error('Error creating reply:', error);

@@ -1,0 +1,51 @@
+CDF-28 — Browse and search topics and replies
+
+This Jira task implements requirements defined in CDF-28 Story 5: Browse and search topics and replies. 
+
+Builds on completed branches:
+- feature/CDF-7
+- feature/CDF-9
+- feature/CDF-13
+- feature/CDF-19
+- feature/CDF-14
+- feature/CDF-33
+- feature/CDF-34
+
+Updated the following files in this task:
+1. topicController.js - added functions for browswing and searching Topics: GetTopics, getTopicByID.
+2. topicRoutes.js - added permanent routes for create, browse and search functions.
+3. App.js - replaced /tasks routing to /forum for CDF system, added TopicDetail route
+4. Login.jsx - replaced /tasks routing to /forum for CDF system
+5. ProtectedRoute.jsx - replaced /tasks routing to /forum for CDF system
+6. CreateReply.jsx - replaced /tasks routing to /forum for CDF system for implementation then deleted per Change (below)
+7. Navbar.jsx - replaced /tasks routing to /forum for CDF system
+8. replyController.js - updated to permanent routes for replies
+
+Created the following in this task:
+9. Forum.jsx - created new main page for CDF-28 functionality, replacing Tasks.jsx
+10. Tasks.jsx - deleted the Tasks page from the starter project, replaced by Forum.jsx
+11. TopicDetail.jsx - new page to display a selected topic with its linked replies and create new replies
+
+CDF-28 Acceptance Criteria status. Test report version 6 records test results in detail. Summary of test results connected with CDF-28:
+- TST028 - PASS
+- TST032 - PASS
+- TST035 - PASS
+- TST036 - PASS
+- TST037 - PASS
+- TST038 - PASS
+- TST039 - PASS
+
+CHANGE LOG (to be added to Jira change log) as UPDATE to Change 8:
+Full browse functionality implemented in this branch. As such the temporary code to verify Create Reply functionality in feature/CDF-28 can be removed.
+Decision: Temporary functions to test "Create Reply" for feature/CDF-34 removed. Following files changed:
+1. Navbar.jsx
+2. App.js
+3. CreateReply.jsx - deleted (fully incorporated in TopicDetail.jsx)
+4. topicRoutes.js
+5. topicController.js
+
+
+Design documentation changes:
+- nil
+
+Reflection. .

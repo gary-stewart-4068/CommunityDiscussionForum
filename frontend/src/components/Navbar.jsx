@@ -9,21 +9,32 @@ const Navbar = () => {
     logout();
     navigate('/login');
   };
+  const handleForumNavigation = (event) => {
+    event.preventDefault();
+    navigate('/forum', { state: { resetSearch: true } });
+  };
   const linkStyle = "px-3 py-2 rounded hover:bg-blue-700 transition-colors";
 
   return (
     <nav className="bg-[#2563a6] text-white px-6 py-4 flex justify-between items-center">
 
       {/* Forum branding */}
-      <Link to="/" className="text-xl font-semibold tracking-wide">Community Discussion Forum</Link>
+      <Link to="/forum"
+        onClick={handleForumNavigation}
+        className="text-xl font-semibold tracking-wide">
+          Community Discussion Forum
+      </Link>
       {/* Navigation links */}
       <div className="flex items-center gap-2">
         {user ? (
           <>
             {/* Member and Admin navigation */}
-            <Link to="/tasks" className={linkStyle}>Forum</Link>
+            <Link
+              to="/forum"
+              onClick={handleForumNavigation}
+              className={linkStyle}>Forum
+            </Link>
             <Link to="/topics/create" className={linkStyle}>Create Topic</Link>
-            <Link to="/replies/create" className={linkStyle}>Create Reply</Link>
             {user.role === 'Admin' && (
               <>
                 <Link to="/admin/users" className={linkStyle}>User Administration</Link>
