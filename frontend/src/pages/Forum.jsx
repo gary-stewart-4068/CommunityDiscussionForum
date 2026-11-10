@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axiosInstance from '../axiosConfig';
 import { useAuth } from '../context/AuthContext';
+import ReportControl from "../components/ReportControl";
 
 const Forum = () => {
   const { user } = useAuth();
@@ -19,6 +20,7 @@ const Forum = () => {
   const [editError, setEditError] = useState('');
   const [editSuccess, setEditSuccess] = useState('');
   const [saving, setSaving] = useState(false);
+  const [reportedContent, setReportedContent] = useState(new Set());
 
   useEffect(() => {
     const fetchTopics = async () => {
@@ -43,12 +45,34 @@ const Forum = () => {
     fetchTopics();
   }, [user, searchQuery, visibility]);
 
+useEffect(() => {
+  let cancelled = false;
+  const fetchMyReports = async () => {
+    try {const response = await axiosInstance.get('/api/reports/mine');
+      if (!cancelled) {setReportedContent(new Set(response.data.map((report) => `${report.contentType}:${report.contentId}`)));}
+    } catch (error) {console.error('Could not retrieve your submitted Reports:', error);
+    }
+  };
+
+  if (user) {fetchMyReports();}
+
+  return () => {cancelled = true;};
+}, [user]);
+
   useEffect(() => {
     if (location.state?.resetSearch) {
       setSearchInput('');
       setSearchQuery('');
     }
   }, [location.key, location.state]);
+
+  const handleReportSubmitted = (contentType, contentId) => {
+    setReportedContent((previousReports) => {
+      const updatedReports = new Set(previousReports);
+      updatedReports.add(`${contentType}:${contentId}`);
+      return updatedReports;
+    });
+  };
 
   const handleSearch = (event) => { event.preventDefault(); setSearchQuery(searchInput.trim()); };
 
@@ -174,6 +198,11 @@ const Forum = () => {
                   Hidden
                 </span>
               )}
+              {reportedContent.has(`Topic:${topic._id}`) && (
+                <span className="absolute right-4 top-4 rounded bg-yellow-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-yellow-800">
+                  Report submitted
+                </span>
+              )}
               {editingTopicId === topic._id ? (
                 <form onSubmit={(event) => handleUpdateTopic(event, topic._id)} className="mb-4">
                   <label htmlFor={`edit-title-${topic._id}`} className="mb-2 block font-semibold">Topic Title</label>
@@ -262,6 +291,7 @@ const Forum = () => {
                       >
                         Edit Topic
                       </button>
+
                       <button
                         type="button"
                         onClick={() => handleDeleteTopic(topic._id)}
@@ -273,6 +303,15 @@ const Forum = () => {
                     </>
                   )
                 }
+
+                {topic._visible && editingTopicId !== topic._id && (
+                  <ReportControl
+                    contentType="Topic"
+                    contentId={topic._id}
+                    alreadyReported={reportedContent.has(`Topic:${topic._id}`)}
+                    onSubmitted={handleReportSubmitted}
+                  />
+                )}
               </div>
             </div>
           ))}

@@ -42,6 +42,7 @@ const Navbar = () => {
               </>
             )}
             <Link to="/profile" className={linkStyle}>My Profile</Link>
+            <span className="px-3 py-2 text-sm font-medium whitespace-nowrap italic">Signed in as {user.name}</span>
             <button
               onClick={handleLogout}
               className="ml-2 px-4 py-2 rounded border border-white font-medium hover:bg-red-700 hover:border-red-700 transition-colors"

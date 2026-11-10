@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axiosInstance from '../axiosConfig';
 import { useAuth } from '../context/AuthContext';
+import ReportControl from '../components/ReportControl';
 
 const TopicDetail = () => {
     const { topicId } = useParams();
@@ -25,6 +26,7 @@ const TopicDetail = () => {
     const [topicEditError, setTopicEditError] = useState('');
     const [topicEditSuccess, setTopicEditSuccess] = useState('');
     const [updatingTopic, setUpdatingTopic] = useState(false);
+    const [reportedContent, setReportedContent] = useState(new Set());
 
     useEffect(() => {
         const fetchTopic = async () => {
@@ -42,6 +44,26 @@ const TopicDetail = () => {
         };
         fetchTopic();
     }, [topicId]);
+
+    useEffect(() => {
+        let cancelled = false;
+        const fetchMyReports = async () => {
+            try {
+                const response = await axiosInstance.get('/api/reports/mine');
+                if (!cancelled) {setReportedContent(new Set(response.data.map((report) => `${report.contentType}:${report.contentId}`)));}
+            } catch (error) {console.error('Could not retrieve your submitted Reports:', error);}
+        };
+        if (user) {fetchMyReports();} else {setReportedContent(new Set());}
+        return () => {cancelled = true;};
+    }, [user]);
+
+    const handleReportSubmitted = (contentType, contentId) => {
+        setReportedContent((previousReports) => {
+            const updatedReports = new Set(previousReports);
+            updatedReports.add(`${contentType}:${contentId}`);
+            return updatedReports;
+        });
+    };
 
     const formatDate = (date) => {
         if (!date) return 'Not available';
@@ -180,6 +202,11 @@ const TopicDetail = () => {
                         Hidden
                     </span>
                 )}
+                {topic._visible && reportedContent.has(`Topic:${topic._id}`) && (
+                    <span className="absolute right-4 top-4 rounded bg-yellow-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-yellow-800">
+                        Report submitted
+                    </span>
+                )}
                 {editingTopic ? (
                     <form onSubmit={handleUpdateTopic} className="mb-6">
                         <label htmlFor="edit-topic-title" className="mb-2 block font-semibold">Topic Title</label>
@@ -231,32 +258,44 @@ const TopicDetail = () => {
                         </p>
                     </>
                 )}
-                {topic.author?._id === (user?._id || user?.id) &&
-                    !editingTopic && (
-                        <div className="mb-6 flex flex-wrap items-center gap-2">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setEditingTopic(true);
-                                    setEditTitle(topic.title);
-                                    setEditTopicContent(topic.content);
-                                    setTopicEditError('');
-                                    setTopicEditSuccess('');
-                                }}
-                                className="rounded bg-yellow-600 px-4 py-2 text-white hover:bg-yellow-700"
-                            >
-                                Edit Topic
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleDeleteTopic}
-                                disabled={updatingTopic}
-                                className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
-                            >
-                                Delete Topic
-                            </button>
-                        </div>
-                    )}
+                {!editingTopic && (
+                    <div className="mb-6 flex flex-wrap items-center gap-2">
+                        {topic.author?._id === (user?._id || user?.id) && (
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setEditingTopic(true);
+                                        setEditTitle(topic.title);
+                                        setEditTopicContent(topic.content);
+                                        setTopicEditError('');
+                                        setTopicEditSuccess('');
+                                    }}
+                                    className="rounded bg-yellow-600 px-4 py-2 text-white hover:bg-yellow-700"
+                                >
+                                    Edit Topic
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleDeleteTopic}
+                                    disabled={updatingTopic}
+                                    className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                    Delete Topic
+                                </button>
+                            </>
+                        )}
+
+                        {topic._visible && (
+                            <ReportControl
+                                contentType="Topic"
+                                contentId={topic._id}
+                                alreadyReported={reportedContent.has(`Topic:${topic._id}`)}
+                                onSubmitted={handleReportSubmitted}
+                            />
+                        )}
+                    </div>
+                )}
                 <div className="border-t border-gray-300 pt-3 text-sm text-gray-600">
                     <p>
                         <span className="font-semibold">Author:</span>{' '}
@@ -292,6 +331,12 @@ const TopicDetail = () => {
                                         Hidden
                                     </span>
                                 )}
+                                {topic._visible && reply._visible &&
+                                    reportedContent.has(`Reply:${reply._id}`) && (
+                                        <span className="absolute right-4 top-4 rounded bg-yellow-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-yellow-800">
+                                            Report submitted
+                                        </span>
+                                    )}
                                 {editingReplyId === reply._id ? (
                                     <form
                                         onSubmit={(event) => handleUpdateReply(event, reply._id)}
@@ -347,31 +392,43 @@ const TopicDetail = () => {
                                 {replyEditError && (
                                     <p role="alert" className="mb-4 rounded bg-red-100 p-3 text-red-700">{replyEditError}</p>
                                 )}
-                                {reply.author?._id === (user?._id || user?.id) &&
-                                    editingReplyId !== reply._id && (
-                                        <div className="mb-4 flex flex-wrap items-center gap-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setEditingReplyId(reply._id);
-                                                    setEditReplyContent(reply.content);
-                                                    setReplyEditError('');
-                                                }}
-                                                className="rounded bg-yellow-600 px-4 py-2 text-white hover:bg-yellow-700"
-                                            >
-                                                Edit Reply
-                                            </button>
+                                {editingReplyId !== reply._id && (
+                                    <div className="mb-4 flex flex-wrap items-center gap-2">
+                                        {reply.author?._id === (user?._id || user?.id) && (
+                                            <>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setEditingReplyId(reply._id);
+                                                        setEditReplyContent(reply.content);
+                                                        setReplyEditError('');
+                                                    }}
+                                                    className="rounded bg-yellow-600 px-4 py-2 text-white hover:bg-yellow-700"
+                                                >
+                                                    Edit Reply
+                                                </button>
 
-                                            <button
-                                                type="button"
-                                                onClick={() => handleDeleteReply(reply._id)}
-                                                disabled={updatingReply}
-                                                className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
-                                            >
-                                                Delete Reply
-                                            </button>
-                                        </div>
-                                    )}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDeleteReply(reply._id)}
+                                                    disabled={updatingReply}
+                                                    className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+                                                >
+                                                    Delete Reply
+                                                </button>
+                                            </>
+                                        )}
+
+                                        {topic._visible && reply._visible && (
+                                            <ReportControl
+                                                contentType="Reply"
+                                                contentId={reply._id}
+                                                alreadyReported={reportedContent.has(`Reply:${reply._id}`)}
+                                                onSubmitted={handleReportSubmitted}
+                                            />
+                                        )}
+                                    </div>
+                                )}
                                 <div className="border-t border-gray-200 pt-3 text-sm text-gray-600">
                                     <span>
                                         <strong>Author:</strong>{' '}
