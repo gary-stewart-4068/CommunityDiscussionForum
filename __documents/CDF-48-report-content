@@ -1,0 +1,39 @@
+CDF-48 — Report a topic or reply
+
+This Jira task implements requirements defined in CDF-48 Story 9: Report a topic or reply. This creates the Report data model, functionality for a User to report a Content item as inappropriate, submit the report, and see visual confirmation of the report attached to the Content item.
+
+Builds on completed branches:
+- feature/CDF-7
+- feature/CDF-9
+- feature/CDF-13
+- feature/CDF-19
+- feature/CDF-14
+- feature/CDF-33
+- feature/CDF-34
+- feature/CDF-28
+- feature/CDF-35
+
+Updated the following files in this task:
+1. server.js - modified to introduce the reporting routes innew reportRoutes.js and reportController.js
+2. Forum.jsx - modified to introduce user reporting functionality on the main Forum page
+3. TopicDetail.jsx - modified to introduce user reporting functionality on the TopicDetail page
+4. Navbar.jsx - included non-feature change to display signed-in user name in the Navbar next to "Sign Out"
+
+Created the following in this task:
+5. Report.js - created a new data model for the Report class
+6. reportController.js - created a new controller for reporting
+7. reportRoutes.js - created the new routes for reporting
+8. ReportControl.jsx - created a new control for users to raise new reports on visible content
+
+CDF-48 Acceptance Criteria status. Test report version 7 records test results in detail. Summary of test results connected with CDF-48:
+- TST045 - PASS
+- TST044 - DEFERRED - Admin moderation and content deletion are implemented in CDF-50 (was CDF-48). Deletion of moderation Reports linked to topics and replies cannot be tested until feature CDF-50 (was CDF-48) is complete.
+
+CHANGE LOG (to be added to Jira change log) as UPDATE to Change 9:
+Full implementation of CDF-46 to delete Reports linked to Topics or Replies being deleted requires CDF-50 implementation. This was incorrectly flagged in CDF-35 as deferred scope for CDF-48.
+Decision: Implement deferred Report deletion scope of CDF-46 to feature/CDF-50 implementation.
+
+Design documentation changes:
+- SysML bdd Class Diagram to update operations and values for Report model
+
+Reflection. .
