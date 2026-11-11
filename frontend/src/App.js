@@ -9,6 +9,7 @@ import Forum from './pages/Forum';
 import UserManagement from './pages/UserManagement';
 import TopicDetail from './pages/TopicDetail';
 import CreateTopic from './pages/CreateTopic';
+import AdminModeration from './pages/AdminModeration';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
             <Route path="/forum" element={<ProtectedRoute><Forum /></ProtectedRoute>} />
             <Route path="/topics/:topicId" element={<ProtectedRoute><TopicDetail /></ProtectedRoute>} />
             <Route path="/admin/users" element={<ProtectedRoute adminOnly><UserManagement /></ProtectedRoute>} />
+            <Route path="/admin/moderation" element={<ProtectedRoute adminOnly><AdminModeration /></ProtectedRoute>} />
             <Route path="/topics/create" element={<ProtectedRoute><CreateTopic /></ProtectedRoute>} />
             {/* Default route */}
             <Route path="/" element={<Navigate to="/forum" replace />} />

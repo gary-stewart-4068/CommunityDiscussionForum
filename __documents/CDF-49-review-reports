@@ -1,0 +1,38 @@
+CDF-49 — Review reported content
+
+This Jira task implements requirements defined in CDF-49 Story 10: Review reported content. This creates the Administrator functionality to view open reports, review a report and make a decision. 
+
+Builds on completed branches:
+- feature/CDF-7
+- feature/CDF-9
+- feature/CDF-13
+- feature/CDF-19
+- feature/CDF-14
+- feature/CDF-33
+- feature/CDF-34
+- feature/CDF-28
+- feature/CDF-35
+- feature/CDF-48
+
+Updated the following files in this task:
+1. reportController.js - modified report controller to include functions required for Administrator moderation
+2. reportRoutes.js - modified to add new protected routes for Admin only functions
+3. App.js - modified to introduce the protected route for the Admin moderation page
+4. Forum.js - modified to include an Admin only status alert if there are open reports for decision
+
+Created the following in this task:
+5. AdminModeration.jsx - new page for Admin moderation with reporting and decision workflow
+
+CDF-49 Acceptance Criteria status. Test report version 7 records test results in detail. Summary of test results connected with CDF-49:
+- TST046 - PASS
+- TST047 - PASS
+- TST048 - PASS
+- TST044 - DEFERRED - Admin moderation and content deletion are implemented in CDF-50 (was CDF-48). Deletion of moderation Reports linked to topics and replies cannot be tested until feature CDF-50 (was CDF-48) is complete.
+
+CHANGE LOG (to be added to Jira change log) as UPDATE to Change (10 next):
+.
+
+Design documentation changes:
+- SysML bdd Class Diagram to update operations and values for Report model
+
+Reflection. .

@@ -21,6 +21,7 @@ const Forum = () => {
   const [editSuccess, setEditSuccess] = useState('');
   const [saving, setSaving] = useState(false);
   const [reportedContent, setReportedContent] = useState(new Set());
+  const [openReportCount, setOpenReportCount] = useState(null);
 
   useEffect(() => {
     const fetchTopics = async () => {
@@ -45,19 +46,33 @@ const Forum = () => {
     fetchTopics();
   }, [user, searchQuery, visibility]);
 
-useEffect(() => {
-  let cancelled = false;
-  const fetchMyReports = async () => {
-    try {const response = await axiosInstance.get('/api/reports/mine');
-      if (!cancelled) {setReportedContent(new Set(response.data.map((report) => `${report.contentType}:${report.contentId}`)));}
-    } catch (error) {console.error('Could not retrieve your submitted Reports:', error);
-    }
-  };
+  useEffect(() => {
+    let cancelled = false;
+    const fetchMyReports = async () => {
+      try {const response = await axiosInstance.get('/api/reports/mine');
+        if (!cancelled) {setReportedContent(new Set(response.data.map((report) => `${report.contentType}:${report.contentId}`)));}
+      } catch (error) {console.error('Could not retrieve your submitted Reports:', error);
+      }
+    };
 
-  if (user) {fetchMyReports();}
+    if (user) {fetchMyReports();}
 
-  return () => {cancelled = true;};
-}, [user]);
+    return () => {cancelled = true;};
+  }, [user]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchOpenReportCount = async () => {
+      try {
+        const response = await axiosInstance.get('/api/reports');
+        if (!cancelled) {const openCount = response.data.filter(report => report.decision === 'Open').length;
+          setOpenReportCount(openCount);}
+      }
+      catch (error) {console.error('Could not retrieve open Report count:', error);}
+    };
+    if (user?.role === 'Admin') {fetchOpenReportCount();}
+    return () => {cancelled = true;};
+  }, [user]);
 
   useEffect(() => {
     if (location.state?.resetSearch) {
@@ -134,6 +149,22 @@ useEffect(() => {
           + Create Topic
         </button>
       </div>
+
+      {user?.role === 'Admin' && (
+        <div className="mb-6 flex flex-col gap-4 rounded-lg border border-yellow-300 bg-yellow-50 p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-800">Moderation reports awaiting decision: {openReportCount ?? '—'}</h2>
+            <p className="mt-1 text-sm text-gray-600">Review submitted Reports and record moderation decisions.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/admin/moderation')}
+            className="rounded bg-blue-600 px-5 py-2 font-medium text-white hover:bg-blue-700"
+          >
+            Review Reports
+          </button>
+        </div>
+      )}
 
       <form onSubmit={handleSearch} className="mb-6 flex flex-col gap-3 sm:flex-row">
         <input
