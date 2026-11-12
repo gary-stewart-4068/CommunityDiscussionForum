@@ -27,6 +27,7 @@ const TopicDetail = () => {
     const [topicEditSuccess, setTopicEditSuccess] = useState('');
     const [updatingTopic, setUpdatingTopic] = useState(false);
     const [reportedContent, setReportedContent] = useState(new Set());
+    const [moderationError, setModerationError] = useState('');
 
     useEffect(() => {
         const fetchTopic = async () => {
@@ -114,6 +115,97 @@ const TopicDetail = () => {
                 error.response?.data?.message ||
                 'Your topic could not be deleted. Please try again.'
             );
+        }
+    };
+
+    const handleAdminTopicVisibility = async () => {
+        const visible = !topic._visible;
+        const replyCount = replies.length;
+        const actionDescription = visible
+            ? `make Topic "${topic.title}" visible`
+            : `hide Topic "${topic.title}"`;
+        const replyDescription = visible
+            ? `All ${replyCount} associated Replies will also be made visible, including any Replies previously hidden individually.`
+            : `The Topic and all ${replyCount} associated Replies will become unavailable to Members.`;
+        const confirmed = window.confirm(`Are you sure you want to ${actionDescription}?\n\n${replyDescription}`);
+        if (!confirmed) return;
+        setModerationError('');
+        try {
+            await axiosInstance.put(`/api/topics/${topicId}/visibility`, { visible });
+            setTopic((previousTopic) => ({...previousTopic, _visible: visible
+            }));
+            // Unhiding a Topic also makes every associated Reply visible.
+            // Hiding a Topic preserves the individual Reply visibility flags.
+            if (visible) {
+                setReplies((previousReplies) =>
+                    previousReplies.map((reply) => ({...reply, _visible: true }))
+                );
+            }
+        } catch (error) {
+            setModerationError(error.response?.data?.message || 'Topic visibility could not be changed. Please try again.');
+        }
+    };
+
+    const handleAdminDeleteTopic = async () => {
+        const replyCount = replies.length;
+        const confirmed = window.confirm(
+            `Are you sure you want to permanently delete Topic "${topic.title}"?\n\n` +
+            `This will also permanently delete all ${replyCount} associated Replies, including Replies written by other Members.\n\n` +
+            `All Reports associated with this Topic and its Replies will also be permanently deleted.\n\n` +
+            `This action cannot be undone.`
+        );
+        if (!confirmed) return;
+        setModerationError('');
+        try {
+            await axiosInstance.delete(`/api/topics/admin/${topicId}`); navigate('/forum');
+        } catch (error) {
+            setModerationError(error.response?.data?.message || 'Topic could not be deleted. Please try again.');
+        }
+    };
+
+    const handleAdminReplyVisibility = async (reply) => {
+        const visible = !reply._visible;
+        const actionDescription = visible
+            ? 'make this Reply visible'
+            : 'hide this Reply';
+        const confirmed = window.confirm(
+            `Are you sure you want to ${actionDescription}?\n\n` +
+            (visible
+                ? 'Members will be able to see this Reply, provided its Topic is visible.'
+                : 'This Reply will no longer be visible to Members. The Topic and its other Replies will remain unchanged.')
+        );
+        if (!confirmed) return;
+        setModerationError('');
+        try {
+            await axiosInstance.put(`/api/topics/${topicId}/replies/${reply._id}/visibility`, { visible });
+            setReplies((previousReplies) =>
+                previousReplies.map((item) =>
+                    item._id === reply._id
+                        ? { ...item, _visible: visible }
+                        : item
+                )
+            );
+        } catch (error) {
+            setModerationError(error.response?.data?.message || 'Reply visibility could not be changed. Please try again.' );
+        }
+    };
+
+    const handleAdminDeleteReply = async (reply) => {
+        const confirmed = window.confirm(
+            `Are you sure you want to permanently delete this Reply?\n\n` +
+            `Reply: "${reply.content}"\n\n` +
+            `All Reports associated with this Reply will also be permanently deleted.\n\n` +
+            `This action cannot be undone.`
+        );
+        if (!confirmed) return;
+        setModerationError('');
+        try {
+            await axiosInstance.delete(`/api/topics/admin/${topicId}/replies/${reply._id}`);
+            setReplies((previousReplies) =>
+                previousReplies.filter((item) => item._id !== reply._id)
+            );
+        } catch (error) {
+            setModerationError(error.response?.data?.message || 'Reply could not be deleted. Please try again.');
         }
     };
 
@@ -259,40 +351,70 @@ const TopicDetail = () => {
                     </>
                 )}
                 {!editingTopic && (
-                    <div className="mb-6 flex flex-wrap items-center gap-2">
-                        {topic.author?._id === (user?._id || user?.id) && (
-                            <>
+                    <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+                        {/* Existing Member actions */}
+                        <div className="flex flex-wrap items-center gap-2">
+                            {topic.author?._id === (user?._id || user?.id) && (
+                                <>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setEditingTopic(true);
+                                            setEditTitle(topic.title);
+                                            setEditTopicContent(topic.content);
+                                            setTopicEditError('');
+                                            setTopicEditSuccess('');
+                                        }}
+                                        className="rounded bg-yellow-600 px-4 py-2 text-white hover:bg-yellow-700"
+                                    >
+                                        Edit Topic
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleDeleteTopic}
+                                        disabled={updatingTopic}
+                                        className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+                                    >
+                                        Delete Topic
+                                    </button>
+                                </>
+                            )}
+                            {topic._visible && (
+                                <ReportControl
+                                    contentType="Topic"
+                                    contentId={topic._id}
+                                    alreadyReported={reportedContent.has(`Topic:${topic._id}`)}
+                                    onSubmitted={handleReportSubmitted}
+                                />
+                            )}
+                        </div>
+                        {/* Admin-only moderation actions */}
+                        {user?.role === 'Admin' && (
+                            <div
+                                className="flex flex-wrap items-center gap-2 rounded-md border p-2"
+                                style={{
+                                    backgroundColor: 'var(--color-surface)',
+                                    borderColor: 'var(--color-border)'
+                                }}
+                            >
+                                <span className="text-sm font-semibold text-gray-700">Admin actions:</span>
                                 <button
                                     type="button"
-                                    onClick={() => {
-                                        setEditingTopic(true);
-                                        setEditTitle(topic.title);
-                                        setEditTopicContent(topic.content);
-                                        setTopicEditError('');
-                                        setTopicEditSuccess('');
-                                    }}
-                                    className="rounded bg-yellow-600 px-4 py-2 text-white hover:bg-yellow-700"
+                                    onClick={handleAdminTopicVisibility}
+                                    className="inline-flex h-10 items-center justify-center rounded px-4 font-medium text-white hover:opacity-90"
+                                    style={{ backgroundColor: 'var(--color-primary)' }}
                                 >
-                                    Edit Topic
+                                    Change Visibility
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={handleDeleteTopic}
-                                    disabled={updatingTopic}
-                                    className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+                                    onClick={handleAdminDeleteTopic}
+                                    className="inline-flex h-10 items-center justify-center rounded px-4 font-medium text-white hover:opacity-90"
+                                    style={{ backgroundColor: 'var(--color-danger)' }}
                                 >
                                     Delete Topic
                                 </button>
-                            </>
-                        )}
-
-                        {topic._visible && (
-                            <ReportControl
-                                contentType="Topic"
-                                contentId={topic._id}
-                                alreadyReported={reportedContent.has(`Topic:${topic._id}`)}
-                                onSubmitted={handleReportSubmitted}
-                            />
+                            </div>
                         )}
                     </div>
                 )}
@@ -310,6 +432,9 @@ const TopicDetail = () => {
             {topicEditError && !editingTopic && (
                 <p role="alert" className="mt-4 rounded bg-red-100 p-4 text-red-700">{topicEditError}</p>
             )}
+            {moderationError && (
+                <p role="alert" className="mt-4 rounded bg-red-100 p-4 text-red-700">{moderationError}</p>
+            )}
             {topicEditSuccess && (
                 <p role="status" className="mt-4 rounded bg-green-100 p-4 text-green-700">{topicEditSuccess}</p>
             )}
@@ -326,9 +451,13 @@ const TopicDetail = () => {
                                 key={reply._id}
                                 className="relative rounded-md border border-gray-300 bg-white p-5"
                             >
-                                {user?.role === 'Admin' && !reply._visible && (
+                                {user?.role === 'Admin' && (!topic._visible || !reply._visible) && (
                                     <span className="absolute right-4 top-4 rounded bg-red-700 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
-                                        Hidden
+                                        {!topic._visible && !reply._visible
+                                            ? 'Hidden Reply & Topic'
+                                            : !topic._visible
+                                                ? 'Hidden with Topic'
+                                                : 'Hidden Reply'}
                                     </span>
                                 )}
                                 {topic._visible && reply._visible &&
@@ -393,39 +522,68 @@ const TopicDetail = () => {
                                     <p role="alert" className="mb-4 rounded bg-red-100 p-3 text-red-700">{replyEditError}</p>
                                 )}
                                 {editingReplyId !== reply._id && (
-                                    <div className="mb-4 flex flex-wrap items-center gap-2">
-                                        {reply.author?._id === (user?._id || user?.id) && (
-                                            <>
+                                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                                        {/* Existing Member actions */}
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            {reply.author?._id === (user?._id || user?.id) && (
+                                                <>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setEditingReplyId(reply._id);
+                                                            setEditReplyContent(reply.content);
+                                                            setReplyEditError('');
+                                                        }}
+                                                        className="rounded bg-yellow-600 px-4 py-2 text-white hover:bg-yellow-700"
+                                                    >
+                                                        Edit Reply
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleDeleteReply(reply._id)}
+                                                        disabled={updatingReply}
+                                                        className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+                                                    >
+                                                        Delete Reply
+                                                    </button>
+                                                </>
+                                            )}
+                                            {topic._visible && reply._visible && (
+                                                <ReportControl
+                                                    contentType="Reply"
+                                                    contentId={reply._id}
+                                                    alreadyReported={reportedContent.has(`Reply:${reply._id}`)}
+                                                    onSubmitted={handleReportSubmitted}
+                                                />
+                                            )}
+                                        </div>
+                                        {/* Admin-only moderation actions */}
+                                        {user?.role === 'Admin' && (
+                                            <div
+                                                className="flex flex-wrap items-center gap-2 rounded-md border p-2"
+                                                style={{
+                                                    backgroundColor: 'var(--color-surface)',
+                                                    borderColor: 'var(--color-border)'
+                                                }}
+                                            >
+                                                <span className="text-sm font-semibold text-gray-700">Admin actions:</span>
                                                 <button
                                                     type="button"
-                                                    onClick={() => {
-                                                        setEditingReplyId(reply._id);
-                                                        setEditReplyContent(reply.content);
-                                                        setReplyEditError('');
-                                                    }}
-                                                    className="rounded bg-yellow-600 px-4 py-2 text-white hover:bg-yellow-700"
+                                                    onClick={() => handleAdminReplyVisibility(reply)}
+                                                    className="inline-flex h-10 items-center justify-center rounded px-4 font-medium text-white hover:opacity-90"
+                                                    style={{ backgroundColor: 'var(--color-primary)' }}
                                                 >
-                                                    Edit Reply
+                                                    Change Visibility
                                                 </button>
-
                                                 <button
                                                     type="button"
-                                                    onClick={() => handleDeleteReply(reply._id)}
-                                                    disabled={updatingReply}
-                                                    className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+                                                    onClick={() => handleAdminDeleteReply(reply)}
+                                                    className="inline-flex h-10 items-center justify-center rounded px-4 font-medium text-white hover:opacity-90"
+                                                    style={{ backgroundColor: 'var(--color-danger)' }}
                                                 >
                                                     Delete Reply
                                                 </button>
-                                            </>
-                                        )}
-
-                                        {topic._visible && reply._visible && (
-                                            <ReportControl
-                                                contentType="Reply"
-                                                contentId={reply._id}
-                                                alreadyReported={reportedContent.has(`Reply:${reply._id}`)}
-                                                onSubmitted={handleReportSubmitted}
-                                            />
+                                            </div>
                                         )}
                                     </div>
                                 )}
