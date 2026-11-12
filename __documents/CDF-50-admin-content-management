@@ -1,0 +1,41 @@
+CDF-50 — Hide, unhide, or delete inappropriate content
+
+This Jira task implements requirements defined in CDF-50 Story 11: Hide, unhide, or delete inappropriate content. This creates the Administrator functionality to hide, unhid and delete any Topics or Replies. This also adds the functionality to delete linked Reports when their associated Topic or Reply is deleted.
+
+Builds on completed branches:
+- feature/CDF-7
+- feature/CDF-9
+- feature/CDF-13
+- feature/CDF-19
+- feature/CDF-14
+- feature/CDF-33
+- feature/CDF-34
+- feature/CDF-28
+- feature/CDF-35
+- feature/CDF-48
+- feature/CDF-49
+
+Updated the following files in this task:
+1. topicController.js - modified to add deleting Reports associated with a Topic and any linked Replies being deleted
+2. replyController.js - modified to add deleting Reports associated with a Reply being deleted
+3. topicRoutes.js - modified to add protected Admin moderation routes for changing cisibility and deleting content
+4. reportRoutes.js - nil changes required
+5. Forum.jsx - modified to introduce Admin content moderation actions on Topic Cards
+6. TopicDetail.jsx - modified to introduce Admin content moderation actions on Topic and Reply Cards
+
+Created the following in this task:
+7. moderationController.js - new controller to handle Admin content management functions
+
+CDF-50 Acceptance Criteria status. Test report version 8 records test results in detail. Summary of test results connected with CDF-50:
+- TST049 - PASS
+- TST050 - PASS
+- TST051 - PASS
+- TST044 - PASS
+
+CHANGE LOG (to be added to Jira change log) as UPDATE to Change 10(11 next):
+.
+
+Design documentation changes:
+nil
+
+Reflection. .

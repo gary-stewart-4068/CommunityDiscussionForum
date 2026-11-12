@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Topic = require('../models/Topic');
 const Reply = require('../models/Reply');
+const Report = require('../models/Report');
 
 // Create a new reply for the authenticated user
 const createReply = async (req, res) => {
@@ -61,7 +62,7 @@ const updateReply = async (req, res) => {
     }
 };
 
-// Delete a reply owned by the authenticated user
+// Delete a reply owned by the authenticated user and its associated Reports
 const deleteReply = async (req, res) => {
     const { topicId, replyId } = req.params;
     // Validate the Topic and Reply IDs
@@ -69,18 +70,32 @@ const deleteReply = async (req, res) => {
         !mongoose.Types.ObjectId.isValid(topicId) ||
         !mongoose.Types.ObjectId.isValid(replyId)
     ) {
-        return res.status(400).json({message: 'Invalid topic or reply ID' }); }
+        return res.status(400).json({message: 'Invalid topic or reply ID' });
+    }
+    let session;
     try {
-        // Find the Reply and verify ownership and Topic relationship
-        const reply = await Reply.findOne({_id: replyId, topic: topicId, author: req.user.id });
-
-        if (!reply) {
-            return res.status(404).json({message: 'Reply not found or you are not authorised to delete it' }); }
-        await Reply.deleteOne({ _id: reply._id });
+        session = await mongoose.startSession();
+        let replyFound = false;
+        await session.withTransaction(async () => {
+            replyFound = false;
+            // Find the Reply and verify ownership and Topic relationship
+            const reply = await Reply.findOne({
+                _id: replyId, topic: topicId, author: req.user.id }).session(session);
+            if (!reply) { return; }
+            replyFound = true;
+            // Delete Reports associated with this Reply
+            await Report.deleteMany({contentType: 'Reply', contentId: reply._id }).session(session);
+            // Delete the Reply
+            await Reply.deleteOne({ _id: reply._id }).session(session);
+        });
+        if (!replyFound) {return res.status(404).json({message: 'Reply not found or you are not authorised to delete it' });}
         return res.status(200).json({message: 'Reply deleted successfully' });
     } catch (error) {
         console.error('Error deleting reply:', error);
-        return res.status(500).json({ message: 'Reply could not be deleted. Please try again.' }); }
+        return res.status(500).json({ message: 'Reply could not be deleted. Please try again.' });
+    } finally {
+        if (session) { await session.endSession(); }
+    }
 };
 
 module.exports = { createReply, updateReply, deleteReply };

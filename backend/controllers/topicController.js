@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Topic = require('../models/Topic');
 const Reply = require('../models/Reply');
+const Report = require('../models/Report');
 
 // Create a new topic for the authenticated user
 const createTopic = async (req, res) => {
@@ -59,7 +60,7 @@ const updateTopic = async (req, res) => {
     }
 };
 
-// Delete a topic owned by the authenticated user and all its replies
+// Delete a topic owned by the authenticated user, all its replies and all associated Reports
 const deleteTopic = async (req, res) => {
     const { topicId } = req.params;
     // Validate the Topic ID
@@ -75,6 +76,16 @@ const deleteTopic = async (req, res) => {
             const topic = await Topic.findOne({_id: topicId, author: req.user.id }).session(session);
             if (!topic) {return; }
             topicFound = true;
+            // Identify all Replies linked to this Topic
+            const replies = await Reply.find({ topic: topic._id }).select('_id').session(session).lean();
+            const replyIds = replies.map((reply) => reply._id);
+            // Delete Reports associated with the Topic and its Replies
+            await Report.deleteMany({
+                $or: [
+                    { contentType: 'Topic', contentId: topic._id },
+                    { contentType: 'Reply', contentId: { $in: replyIds } }
+                ]
+            }).session(session);
             // Delete every Reply linked to this Topic
             await Reply.deleteMany({topic: topic._id }).session(session);
             // Delete the Topic

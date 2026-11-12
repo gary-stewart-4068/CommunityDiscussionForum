@@ -22,6 +22,7 @@ const Forum = () => {
   const [saving, setSaving] = useState(false);
   const [reportedContent, setReportedContent] = useState(new Set());
   const [openReportCount, setOpenReportCount] = useState(null);
+  const [moderationError, setModerationError] = useState('');
 
   useEffect(() => {
     const fetchTopics = async () => {
@@ -138,6 +139,60 @@ const Forum = () => {
     }
   };
 
+  const handleAdminVisibility = async (topic) => {
+    const visible = !topic._visible;
+    const replyCount = topic.replyCount ?? 0;
+    const actionDescription = visible
+      ? `make Topic "${topic.title}" visible`
+      : `hide Topic "${topic.title}"`;
+    const replyDescription = visible
+      ? `All ${replyCount} associated Replies will also be made visible, including any Replies previously hidden individually.`
+      : `The Topic and all ${replyCount} associated Replies will become unavailable to Members.`;
+    const confirmed = window.confirm(`Are you sure you want to ${actionDescription}?\n\n${replyDescription}`);
+    if (!confirmed) return;
+    setModerationError('');
+    try {
+      await axiosInstance.put(`/api/topics/${topic._id}/visibility`, { visible });
+      setTopics((previousTopics) =>
+        previousTopics.map((item) =>
+          item._id === topic._id
+            ? { ...item, _visible: visible }
+            : item
+        )
+      );
+    } catch (error) {
+      setModerationError(error.response?.data?.message || 'Topic visibility could not be changed. Please try again.');
+    }
+  };
+
+  const handleAdminDeleteTopic = async (topic) => {
+  const replyCount = topic.replyCount ?? 0;
+
+  const confirmed = window.confirm(
+    `Are you sure you want to permanently delete Topic "${topic.title}"?\n\n` +
+    `This will also permanently delete all ${replyCount} associated Replies, including Replies written by other Members.\n\n` +
+    `All Reports associated with this Topic and its Replies will also be permanently deleted.\n\n` +
+    `This action cannot be undone.`
+  );
+
+  if (!confirmed) return;
+
+  setModerationError('');
+
+  try {
+    await axiosInstance.delete(`/api/topics/admin/${topic._id}`);
+
+    setTopics((previousTopics) =>
+      previousTopics.filter((item) => item._id !== topic._id)
+    );
+  } catch (error) {
+    setModerationError(
+      error.response?.data?.message ||
+      'Topic could not be deleted. Please try again.'
+    );
+  }
+};
+
   return (
     <div className="container mx-auto p-6">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -212,6 +267,7 @@ const Forum = () => {
       {loading && (<p className="py-6 text-center text-gray-600">Loading topics...</p>)}
       {!loading && error && (<p className="rounded bg-red-100 p-4 text-red-700">{error}</p>)}
       {!loading && editSuccess && (<p role="status" className="mb-4 rounded bg-green-100 p-4 text-green-700">{editSuccess}</p>)}
+      {!loading && moderationError && (<p role="alert" className="mb-4 rounded bg-red-100 p-4 text-red-700">{moderationError}</p>)}
       {!loading && !error && topics.length === 0 && (
         <p className="rounded bg-gray-100 p-6 text-center text-gray-600">
           {searchQuery
@@ -299,15 +355,17 @@ const Forum = () => {
                 )}
               </div>
 
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                <button
-                  onClick={() => navigate(`/topics/${topic._id}`)}
-                  className="inline-flex h-10 w-36 items-center justify-center rounded bg-blue-600 px-4 text-center font-medium text-white hover:bg-blue-700"
-                >
-                  View Topic
-                </button>
-                {topic.author?._id === (user?._id || user?.id) &&
-                  editingTopicId !== topic._id && (
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                {/* Existing Member actions */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/topics/${topic._id}`)}
+                    className="inline-flex h-10 w-36 items-center justify-center rounded bg-blue-600 px-4 text-center font-medium text-white hover:bg-blue-700"
+                  >
+                    View Topic
+                  </button>
+                  {topic.author?._id === (user?._id || user?.id) && editingTopicId !== topic._id && (
                     <>
                       <button
                         type="button"
@@ -322,7 +380,6 @@ const Forum = () => {
                       >
                         Edit Topic
                       </button>
-
                       <button
                         type="button"
                         onClick={() => handleDeleteTopic(topic._id)}
@@ -332,16 +389,43 @@ const Forum = () => {
                         Delete Topic
                       </button>
                     </>
-                  )
-                }
-
-                {topic._visible && editingTopicId !== topic._id && (
-                  <ReportControl
-                    contentType="Topic"
-                    contentId={topic._id}
-                    alreadyReported={reportedContent.has(`Topic:${topic._id}`)}
-                    onSubmitted={handleReportSubmitted}
-                  />
+                  )}
+                  {topic._visible && editingTopicId !== topic._id && (
+                    <ReportControl
+                      contentType="Topic"
+                      contentId={topic._id}
+                      alreadyReported={reportedContent.has(`Topic:${topic._id}`)}
+                      onSubmitted={handleReportSubmitted}
+                    />
+                  )}
+                </div>
+                {/* Admin-only moderation actions */}
+                {user?.role === 'Admin' && (
+                  <div
+                    className="flex flex-wrap items-center gap-2 rounded-md border p-2"
+                    style={{
+                      backgroundColor: 'var(--color-surface)',
+                      borderColor: 'var(--color-border)'
+                    }}
+                  >
+                    <span className="text-sm font-semibold text-gray-700">Admin actions:</span>
+                    <button
+                      type="button"
+                      onClick={() => handleAdminVisibility(topic)}
+                      className="inline-flex h-10 items-center justify-center rounded px-4 font-medium text-white hover:opacity-90"
+                      style={{ backgroundColor: 'var(--color-primary)' }}
+                    >
+                      Change Visibility
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleAdminDeleteTopic(topic)}
+                      className="inline-flex h-10 items-center justify-center rounded px-4 font-medium text-white hover:opacity-90"
+                      style={{ backgroundColor: 'var(--color-danger)' }}
+                    >
+                      Delete Topic
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
