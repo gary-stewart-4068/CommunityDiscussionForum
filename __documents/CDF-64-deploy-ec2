@@ -1,0 +1,45 @@
+CDF-64 — Deploy a working forum workflow to EC2
+
+This Jira task implements requirements defined in CDF-64 Story 12: CDF-64: Deploy a working forum workflow to EC2. This configures the project for public deployment in an AWS EC2 instance.
+
+Builds on completed branches:
+- feature/CDF-7
+- feature/CDF-9
+- feature/CDF-13
+- feature/CDF-19
+- feature/CDF-14
+- feature/CDF-33
+- feature/CDF-34
+- feature/CDF-28
+- feature/CDF-35
+- feature/CDF-48
+- feature/CDF-49
+- feature/CDF-50
+
+Updated the following files in this task:
+1. frontend/src/axiosConfig.jsx - modified to set up the API routings to point to development or production APIs depending on deployment
+2. backend/package-lock.json - modified package metadata to align with project
+3. backend/package.json - modified package metadata to align with project
+4. frontend/package-lock.json - modified package metadata to align with project
+5. frontend/package.json - modified package metadata to align with project
+6. package-lock.json - modified package metadata to align with project
+7. package.json - modified package metadata to align with project
+8. README.md - updated to include production deployment instructions
+
+Created the following in this task:
+9. ecosystem.config.js — defines the PM2 production processes for the backend and frontend. It allows PM2 to manage both application processes and restore them using the PM2 systemd startup configuration when the EC2 instance starts.
+10. scripts/deploy-production.sh — provides a manual production deployment procedure. It retrieves the latest code from the main branch, installs backend and frontend dependencies, builds the React production application, restarts the PM2 processes, saves the process configuration and runs the production verification script.
+11. scripts/check-production.sh — verifies the production deployment by checking Nginx, the PM2 systemd startup service, application process status and frontend/backend responses.
+
+Validation and testing.
+The production verification completed successfully. Nginx and the PM2 startup service were active and enabled. Both PM2 application processes (cdf-backend and cdf-frontend) were online. Frontend responses through the direct application port and Nginx were successful, and the backend responded through Nginx.
+
+The PM2 startup recovery procedure was also tested by terminating the PM2 daemon and restarting its systemd service. Both application processes were successfully restored.
+
+CHANGE LOG (to be added to Jira change log) as UPDATE to Change (11 next):
+.
+
+Design documentation changes:
+nil
+
+Reflection. .
