@@ -1,7 +1,7 @@
 {
-  "name": "task-manager-backend",
+  "name": "community-discussion-forum-backend",
   "version": "1.0.0",
-  "description": "Backend for Task Manager App",
+  "description": "Backend for IFQ636 Assignment 1 Community Discussion Forum App",
   "main": "server.js",
   "scripts": {
     "test": "mocha",
@@ -27,6 +27,6 @@
     "nodemon": "^2.0.15",
     "sinon": "^19.0.2"
   },
-  "author": "Task Manager Team",
+  "author": "Gary Stewart",
   "license": "ISC"
 }
