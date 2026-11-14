@@ -2,30 +2,35 @@
 
 **Contents:**
 1. Exceptions to Assignment Requirements
-2. Application Overview
-3. Pre-requisites
-4. Application Deployment Instructions
+2. Key application links
+3. Application Overview
+4. Pre-requisites
+5. Application Deployment Instructions
 
 ## 1. Exceptions to Assignment Requirements
 
 - The EC2 instance is deployed in a public subnet with an active Internet Gateway route.<br>
 - The university-provided Security Group currently restricts inbound HTTP access on TCP port 80 to approved IP addresses.<br>
-- Attempts to configure unrestricted public HTTP access using 0.0.0.0/0 have not resulted in a persistent rule. The student AWS IAM role also does not currently permit the creation of additional Security Groups.<br>
-- A request has been submitted to the university for persistent public HTTP access.<br>
-
-- Consequently, access from networks outside the approved IP addresses may be unavailable until the restriction is resolved.<br>
+- The assignment video recording demonstrates the ability to connect to the deployed production application from a public IP address. This IP address was enabled with an inbound security rule for the duration of the video recording.<br>
 - The application URL must therefore be tested from the network permitted by the current Security Group configuration.<br>
-- The EC2 instance does not have an Elastic IP. Its public IPv4 address may change whenever the instance is stopped and restarted. Always retrieve the current address from the EC2 Console before accessing the application.<br>
-- The university AWS environment may automatically stop the instance at midnight. If the instance stops during the assessment period, repeat the startup procedure and retrieve the new public IP address.<br>
 
 ---
 
-## 2. Application Overview
+### 2 Key Application Links
+GitHub repository: https://github.com/gary-stewart-4068/CommunityDiscussionForum<br>
+Jira project: https://dzqzwj.atlassian.net/jira/software/projects/CDF/summary<br>
+- AWS region: ap-southeast-2<br>
+- EC2 Instance ID: i-0ba098c45733fb7ff<br>
+- EC2 Instance name: GS-CDF<br>
+
+---
+
+## 3. Application Overview
 
 **Community Discussion Forum (CDF) Application Overview:**
 This application has been developed for IFQ636 Assignment 1. The CDF application is designed to demonstrate a forum discussion board for a generic community group by providing a user-friendly interface for creating, viewing, updating, moderating and deleting forum topics and replies.
 
-The CDF is a basic discussion forum. There are two permitted roles: **Members** that are the default role when a user registers, and **Admin** responsible for CDF user management and content moderation.
+The CDF is a basic discussion forum. There are two permitted roles: **Member** is the default role when a user registers, and **Admin** responsible for CDF user management and content moderation.
 
 **Content** The CDF has two types of content: **Topic** that contains a title and description, and **Reply**. A topic can have multiple replies linked to it. Any valid user can create, update and delete their own content. Any valid user can view and search visible content with a simple text string search.
 
@@ -43,9 +48,9 @@ This application is built on the start app provided by QUT.
 
 ---
 
-## 3. Pre-requisites
+## 4. Pre-requisites
 
-### 3.1 Development Environment
+### 4.1 Development Environment
 To install, configure and run the application locally, the following software and accounts are required:<br>
 •	Node.js: https://nodejs.org/en <br>
 •	Git: https://git-scm.com/<br>
@@ -54,7 +59,7 @@ To install, configure and run the application locally, the following software an
 •	GitHub account: https://github.com/signup<br>
 MongoDB Atlas is used to host the application's database.
 
-### 3.2 Production Environment
+### 4.2 Production Environment
 The production application is deployed on an AWS EC2 instance.
 The production environment uses:<br>
 - Operating system: Ubuntu<br>
@@ -65,13 +70,13 @@ The production environment uses:<br>
 - Process management: PM2<br>
 - Application access: HTTP through Nginx<br>
 
-The application is configured to run on the EC2 instance without requiring the assessor to install the development software listed in Section 3.1.
+The application is configured to run on the EC2 instance without requiring the assessor to install the development software listed in Section 4.1.
 
 ---
 
-## 4. Application Deployment Instructions
+## 5. Application Deployment Instructions
 
-### 4.1 Deployment Overview
+### 5.1 Deployment Overview
 The Community Discussion Forum is deployed on an AWS EC2 instance in the ap-southeast-2 (Sydney) region.
 The production application uses the following architecture:<br>
 •	The React frontend is built for production and served through PM2 on port 3000.<br>
@@ -80,10 +85,11 @@ The production application uses the following architecture:<br>
 •	MongoDB Atlas hosts the application database.<br>
 The frontend and backend application ports are not intended to be accessed directly from the internet. External browser requests are routed through Nginx.
 
-### 4.2 AWS Infrastructure
+### 5.2 AWS Infrastructure
 The production environment uses the following AWS configuration:<br>
 - AWS region: ap-southeast-2<br>
-- EC2 Instance ID: i-0ba098c45733fb7ff  | name: GS-CDF<br>
+- EC2 Instance ID: i-0ba098c45733fb7ff<br>
+- EC2 Instance name: GS-CDF<br>
 - Instance type: t3.medium<br>
 - Operating system: Ubuntu 26.04.1 LTS<br>
 - VPC ID: vpc-07584b1ef8bcee90<br>
@@ -93,7 +99,9 @@ The production environment uses the following AWS configuration:<br>
 
 The EC2 instance is deployed in a public subnet. Its route table contains an active default route (0.0.0.0/0) through an Internet Gateway.
 
-### 4.3 Starting the EC2 Instance
+Inbound access remains subject to the university Security Group restrictions described in Section 1.
+
+### 5.3 Starting the EC2 Instance
 The university AWS environment may automatically stop the EC2 instance at midnight. If the instance is stopped, it must be started again before the application can be accessed.
 To start the application environment:
 1.	Sign in to the AWS Management Console.
@@ -104,7 +112,7 @@ To start the application environment:
 6.	Wait until the instance state is Running.
 7.	Confirm that both EC2 status checks have passed.
 
-### 4.4 Retrieve the Current Public IP Address
+### 5.4 Retrieve the Current Public IP Address
 The EC2 instance uses a dynamic public IPv4 address rather than an Elastic IP address.
 The public IP address may change whenever the instance is stopped and restarted.
 After starting the instance:
@@ -114,10 +122,9 @@ After starting the instance:
 
 The application URL is:
 `http://<CURRENT_PUBLIC_IPV4_ADDRESS>`
-For example: http://3.106.255.198
 The example address is provided for illustration. Always retrieve the current address from the AWS Console before accessing the application.
 
-### 4.5 Application Startup
+### 5.5 Application Startup
 The production environment is configured to start automatically when the EC2 instance starts.
 The following services are configured for automatic startup:<br>
 •	Nginx: Provides the web server and reverse proxy.<br>
@@ -129,7 +136,20 @@ PM2 restores the application processes using the saved process configuration.
 The backend connects to MongoDB Atlas and checks whether an active Admin account exists. If no active Admin account exists, the initial Admin account is created using the credentials configured in the server-side environment file.
 Existing Member accounts, Topics, Replies and Reports are retained in MongoDB Atlas. Restarting the EC2 instance does not require the database to be recreated or populated again.
 
-### 4.6 Deploying Application Updates
+**Cold-start verification**
+The automatic startup and recovery configuration has been tested by stopping and restarting the EC2 instance. This is documented in the test report at TST052.
+
+The verification confirmed that:<br>
+- Nginx started successfully.<br>
+- The PM2 systemd service started successfully.<br>
+- PM2 restored both application processes.<br>
+- The backend connected successfully to MongoDB Atlas.<br>
+- The initial Admin account was created successfully when no active Admin account existed.<br>
+- The frontend and backend responded successfully through Nginx.<br>
+- The application loaded and could be accessed and used through a web browser.<br>
+This confirmed that the application can recover after an EC2 instance restart without manually deploying the application again.
+
+### 5.6 Deploying Application Updates
 
 The production application can be updated manually when a new version is available in the GitHub repository.
 
@@ -156,7 +176,7 @@ The application also includes `scripts/check-production.sh`, which can be execut
 
 The deployment script is intended for new application releases. It is not required when restarting an EC2 instance because the PM2 systemd service automatically restores the saved application processes.
 
-### 4.7 Application Verification
+### 5.7 Application Verification
 After starting the EC2 instance, an administrator can connect to the instance through SSH to verify the production environment.
 Check Nginx: `sudo systemctl status nginx --no-pager`
 Check the PM2 startup service: `sudo systemctl status pm2-ubuntu --no-pager`
@@ -172,7 +192,7 @@ Run the production verification script: `./scripts/check-production.sh`
 
 The verification script checks Nginx, the PM2 startup service, application process status and frontend/backend responses.
 
-### 4.8 Security Configuration and Environment Variables
+### 5.8 Security Configuration and Environment Variables
 Production environment variables are configured on the EC2 instance in: **backend/.env**
 This file contains sensitive database connection and authentication configuration.
 Security measures include:<br>
@@ -182,10 +202,5 @@ Security measures include:<br>
 •	The repository contains an example environment configuration without production secrets.<br>
 •	SSH access is restricted to an authorised IP address.<br>
 •	Frontend and backend application ports 3000 and 5001 are not directly exposed to the internet.<br>
-
-### 4.9 Project References
-GitHub repository: https://github.com/gary-stewart-4068/CommunityDiscussionForum
-Jira project: https://dzqzwj.atlassian.net/jira/software/projects/CDF/summary
-AWS EC2 Instance ID: i-0ba098c45733fb7ff  | name: GS-CDF
 
 ---
